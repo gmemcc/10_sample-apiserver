@@ -1,0 +1,10 @@
+kind: Endpoints
+apiVersion: v1
+metadata:
+  name: api
+subsets:
+  - addresses:
+      - ip: # 这里填写本机地址
+    ports:
+      - port: 8443
+        name: https

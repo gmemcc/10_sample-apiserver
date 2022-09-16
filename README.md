@@ -114,12 +114,33 @@ kubectl apply -f artifacts/example/service.yaml
 
 #### 测试
 
-以下几步都不通
-
-- 创建 APIService
+- 注册 APIService
 
 ```shell
 kubectl apply -f artifacts/example/apiservice.yaml
+```
+
+- 为aa-server注册服务
+```shell
+kubectl create namespace wardle
+
+# 创建无选择器的服务
+kubectl -n wardle apply -f artifacts/example/service.yaml
+
+# 手工将其endpoint执行运行在集群外的aa-server
+kubectl -n wardle apply -f - <<EOF
+kind: Endpoints
+apiVersion: v1
+metadata:
+  name: api
+subsets:
+  - addresses:
+      - ip: # 这里填写本机地址
+    ports:
+      - port: 8443
+        name: https
+EOF
+
 ```
 
 - 创建 flunders 资源
