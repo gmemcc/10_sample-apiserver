@@ -56,12 +56,6 @@ GODEBUG=x509sha1=1 go run main.go --secure-port 8443 --etcd-servers http://127.0
 
 直接通过 URL 调用 aaserver，如果要用 kubectl，还需要配置 kind k8s 集群。
 
-- 确认 aa-server 已注册资源
-
-```shell
-kubectl get apiservices.apiregistration.k8s.io | grep wardle
-```
-
 - List all API resources：
 
 ```shell
@@ -85,6 +79,12 @@ kubectl apply -f artifacts/example/ns.yaml
 kubectl apply -f artifacts/example/apiservice.yaml
 kubectl apply -f artifacts/example/service.yaml
 kubectl apply -f artifacts/example/endpoint.yaml
+```
+
+- 确认 aaserver 已注册资源
+
+```shell
+kubectl get apiservices.apiregistration.k8s.io | grep wardle
 kubectl -n wardle get svc api -o yaml  
 kubectl -n wardle get ep api -o yaml 
 ```
@@ -101,7 +101,7 @@ kubectl apply -f artifacts/flunders/flunder.yaml
 kubectl get --raw "/apis/wardle.example.com/v1alpha1/namespaces/wardle/flunders"
 ```
 
-##### cleanup
+#### cleanup
 
 ```shell
 kubectl delete -f artifacts/flunders/flunder.yaml
