@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: wardle-server
+  name: aaserver
   namespace: wardle
   labels:
     apiserver: "true"
@@ -17,9 +17,9 @@ spec:
     spec:
       serviceAccountName: apiserver
       containers:
-      - name: wardle-server
+      - name: main-aaserver
         # build from 10_sample-apiserver/Dockerfile
-        image: kube-sample-apiserver:latest
+        image: wukongsun/sample-apiserver:0.1
         imagePullPolicy: Never
         args: [ "--etcd-servers=http://localhost:2379" ]
       - name: etcd

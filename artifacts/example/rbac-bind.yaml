@@ -1,12 +1,12 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: sample-apiserver-clusterrolebinding
+  name: aaserver
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: aggregated-apiserver-clusterrole
+  name: aaserver
 subjects:
 - kind: ServiceAccount
-  name: apiserver
+  name: aaserver
   namespace: wardle

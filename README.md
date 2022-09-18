@@ -19,7 +19,7 @@ kubectl config use-context kind-kind
 #### 客户端访问凭证
 
 ```shell
-cd /tmp
+cd configs/cert
 openssl req -nodes -new -x509 -keyout ca.key -out ca.crt # 可随意填写
 openssl req -out client.csr -new -newkey rsa:4096 -nodes -keyout client.key -subj "/CN=development/O=system:masters"
 openssl x509 -req -days 365 -in client.csr -CA ca.crt -CAkey ca.key -set_serial 01 -out client.crt
@@ -29,7 +29,6 @@ openssl pkcs12 -export -in ./client.crt -inkey ./client.key -out client.p12 # �
 #### 代码更新
 
 ```shell
-cd 10_sample-apiserver
 go mod tidy
 go mod vendor
 hack/update-codegen.sh
@@ -46,7 +45,7 @@ etcd # 启动 Etcd 数据库
 通过进程启动 aa-server
 
 ```shell
-GODEBUG=x509sha1=1 go run main.go --secure-port 8443 --etcd-servers http://127.0.0.1:2379   --kubeconfig ~/.kube/config --authentication-kubeconfig ~/.kube/config --authorization-kubeconfig ~/.kube/config --client-ca-file=/tmp/ca.crt # Go 1.18 之后得注明 GODENBUG 参数
+GODEBUG=x509sha1=1 go run main.go --secure-port 8443 --etcd-servers http://127.0.0.1:2379   --kubeconfig ~/.kube/config --authentication-kubeconfig ~/.kube/config --authorization-kubeconfig ~/.kube/config --client-ca-file=configs/cert/ca.crt # Go 1.18 之后得注明 GODENBUG 参数
 ```
 
 #### 测试
@@ -55,28 +54,37 @@ GODEBUG=x509sha1=1 go run main.go --secure-port 8443 --etcd-servers http://127.0
 
 直接通过 URL 调用 aa-server，如果要用 kubectl，还需要配置 kind k8s 集群。
 
+- 确认 aa-server 已注册资源
+
+```shell
+kubectl get apiservices.apiregistration.k8s.io | grep wardle
+```
+
 - List all API resources：
 
 ```shell
-curl -k --cert-type P12 --cert /tmp/client.p12:P@ssw0rd \
+curl -k --cert-type P12 --cert configs/cert/client.p12:P@ssw0rd \
 https://127.0.0.1:8443/apis
 ```
 
 - List flunders resources：
 
 ```shell
-curl -fv -k --cert-type P12 --cert /tmp/client.p12:P@ssw0rd \
+curl -k --cert-type P12 --cert configs/cert/client.p12:P@ssw0rd \
 https://127.0.0.1:8443/apis/wardle.example.com/v1alpha1/namespaces/default/flunders
 ```
 
-##### ？？？通过 kube-aggregator
-
-以下几步都不通
+##### 通过 kube-aggregator
 
 - 创建 APIService
 
 ```shell
+kubectl apply -f artifacts/example/ns.yaml
 kubectl apply -f artifacts/example/apiservice.yaml
+kubectl apply -f artifacts/example/service.yaml
+kubectl apply -f artifacts/example/endpoint.yaml
+kubectl -n wardle get svc api -o yaml  
+kubectl -n wardle get ep api -o yaml 
 ```
 
 - 创建 flunders 资源
@@ -88,26 +96,36 @@ kubectl apply -f artifacts/flunders/flunder.yaml
 - 通过 get -raw 调用
 
 ```shell
-kubectl get --raw "/apis/wardle.example.com/v1alpha1/namespaces/default/flunders"
+kubectl get --raw "/apis/wardle.example.com/v1alpha1/namespaces/wardle/flunders"
+```
+
+##### cleanup
+
+```shell
+kubectl delete -f artifacts/flunders/flunder.yaml
+kubectl delete -f artifacts/example/endpoint.yaml
+kubectl delete -f artifacts/example/service.yaml
+kubectl delete -f artifacts/example/apiservice.yaml
+kubectl delete -f artifacts/example/ns.yaml
 ```
 
 ### k8s 部署
 
-- 构建镜像
+#### 构建镜像
 
 ```shell
-docker build -f Dockerfile .
+docker build -t wukongsun/sample-apiserver:0.1 .
 ```
 
-- 部署 k8s 相关资源
+#### 部署 k8s 资源
 
 ```shell
+kubectl apply -f artifacts/example/ns.yaml
 kubectl apply -f artifacts/example/sa.yaml
 kubectl apply -f artifacts/example/rbac.yaml
 kubectl apply -f artifacts/example/rbac-bind.yaml
 kubectl apply -f artifacts/example/auth-delegator.yaml
 kubectl apply -f artifacts/example/auth-reader.yaml
-kubectl apply -f artifacts/example/ns.yaml
 kubectl apply -f artifacts/example/deployment.yaml
 kubectl apply -f artifacts/example/service.yaml
 ```
@@ -120,37 +138,13 @@ kubectl apply -f artifacts/example/service.yaml
 kubectl apply -f artifacts/example/apiservice.yaml
 ```
 
-- 为aa-server注册服务
-```shell
-kubectl create namespace wardle
-
-# 创建无选择器的服务
-kubectl -n wardle apply -f artifacts/example/service.yaml
-
-# 手工将其endpoint执行运行在集群外的aa-server
-kubectl -n wardle apply -f - <<EOF
-kind: Endpoints
-apiVersion: v1
-metadata:
-  name: api
-subsets:
-  - addresses:
-      - ip: # 这里填写本机地址
-    ports:
-      - port: 8443
-        name: https
-EOF
-
-```
-
 - 创建 flunders 资源
-
 ```shell
 kubectl apply -f artifacts/flunders/flunder.yaml
 ```
 
-- 通过 get -raw 调用
+- 通过 get --raw 调用
 
 ```shell
-kubectl get --raw "/apis/wardle.example.com/v1alpha1/namespaces/default/flunders"
+kubectl get --raw "/apis/wardle.example.com/v1alpha1/namespaces/wardle/flunders"
 ```
