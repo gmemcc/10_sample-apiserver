@@ -42,6 +42,8 @@ etcd # 启动 Etcd 数据库
 
 ### 进程部署
 
+#### 启动服务
+
 通过进程启动 aa-server
 
 ```shell
@@ -50,9 +52,9 @@ GODEBUG=x509sha1=1 go run main.go --secure-port 8443 --etcd-servers http://127.0
 
 #### 测试
 
-##### 直接调用 aa-server
+##### 直接调用aaserver
 
-直接通过 URL 调用 aa-server，如果要用 kubectl，还需要配置 kind k8s 集群。
+直接通过 URL 调用 aaserver，如果要用 kubectl，还需要配置 kind k8s 集群。
 
 - 确认 aa-server 已注册资源
 
@@ -74,7 +76,7 @@ curl -k --cert-type P12 --cert configs/cert/client.p12:P@ssw0rd \
 https://127.0.0.1:8443/apis/wardle.example.com/v1alpha1/namespaces/default/flunders
 ```
 
-##### 通过 kube-aggregator
+##### 通过kube-aggregator
 
 - 创建 APIService
 
@@ -117,7 +119,7 @@ kubectl delete -f artifacts/example/ns.yaml
 docker build -t wukongsun/sample-apiserver:0.1 .
 ```
 
-#### 部署 k8s 资源
+#### 部署k8s资源
 
 ```shell
 kubectl apply -f artifacts/example/ns.yaml
@@ -126,8 +128,15 @@ kubectl apply -f artifacts/example/rbac.yaml
 kubectl apply -f artifacts/example/rbac-bind.yaml
 kubectl apply -f artifacts/example/auth-delegator.yaml
 kubectl apply -f artifacts/example/auth-reader.yaml
+```
+
+#### 启动服务
+
+```shell
 kubectl apply -f artifacts/example/deployment.yaml
 kubectl apply -f artifacts/example/service.yaml
+kubectl -n wardle get svc api -o yaml  
+kubectl -n wardle get deployment api -o yaml 
 ```
 
 #### 测试
