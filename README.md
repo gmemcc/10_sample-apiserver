@@ -137,8 +137,6 @@ kubectl apply -f artifacts/example/auth-reader.yaml
 ```shell
 kubectl apply -f artifacts/example/deployment.yaml
 kubectl apply -f artifacts/example/service.yaml
-kubectl -n wardle get svc api -o yaml  
-kubectl -n wardle get deployment api -o yaml 
 ```
 
 #### 测试
@@ -147,7 +145,10 @@ kubectl -n wardle get deployment api -o yaml
 
 ```shell
 kubectl apply -f artifacts/example/apiservice.yaml
+# 执行下面的命令，直到aaserver服务运行，即AVAILABLE为true
+kubectl get apiservice v1alpha1.wardle.example.com
 ```
+
 
 - 创建 flunders 资源
 ```shell
