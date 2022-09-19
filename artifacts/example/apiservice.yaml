@@ -8,6 +8,6 @@ spec:
   groupPriorityMinimum: 1000
   versionPriority: 15
   service:
-    name: api
+    name: aaserver
     namespace: wardle
   version: v1alpha1

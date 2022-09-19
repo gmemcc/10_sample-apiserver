@@ -117,6 +117,8 @@ kubectl delete -f artifacts/example/ns.yaml
 
 ```shell
 docker build -t wukongsun/sample-apiserver:0.1 .
+kind load docker-image wukongsun/sample-apiserver:0.1
+# docker exec kind-control-plane crictl images | grep wukongsun 确认镜像已加载
 ```
 
 #### 部署k8s资源
